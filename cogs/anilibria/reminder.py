@@ -18,7 +18,7 @@ class ALReminder(discord.Cog):
 
     @guild_only()
     @has_permissions(manage_guild=True)
-    @reminder.command(name='disable')
+    @reminder.command(name='disable', description='Отключить отправку оповещений.')
     async def slash_disable(
             self, ctx: discord.ApplicationContext
     ):
@@ -29,7 +29,7 @@ class ALReminder(discord.Cog):
 
         if db_guild_object.reminder_channel_id == 0:
             return await ctx.respond(
-                content="Оповещения уже отключены, используйте </reminder set:1> для их включения.",
+                content="Оповещения уже отключены, используйте </reminder set:1015015152644542485> для их включения.",
                 phemeral=True
             )
 
@@ -42,7 +42,7 @@ class ALReminder(discord.Cog):
 
     @guild_only()
     @has_permissions(manage_guild=True)
-    @reminder.command(name='set')
+    @reminder.command(name='set', description='Включить отправку оповещений.')
     async def slash_set(
             self, ctx: discord.ApplicationContext, channel: discord.Option(
                 discord.TextChannel, name='канал', description='Канал в который будут отправляться оповещения.'
