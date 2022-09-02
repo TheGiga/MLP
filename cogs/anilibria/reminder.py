@@ -85,19 +85,19 @@ class ALReminder(discord.Cog):
         to_post = await api.get_updates()
 
         if len(to_post) == 0:
+            print('No updates.')
             return
 
-        for guild in self.bot.guilds:
-            db_guild_object, created = await Guild.get_or_create(discord_id=guild.id)
+        print('There is updates, processing...')
 
-            if created:
-                print(f'Created object for guild {guild}({guild.id}), but in loop.')
-                continue
+        db_guilds = await Guild.exclude(reminder_channel_id=0)
+        print(db_guilds)
+
+        for db_guild_object in db_guilds:
+            guild = self.bot.get_guild(db_guild_object.discord_id)
+            print(guild)
 
             channel = guild.get_channel(db_guild_object.reminder_channel_id)
-
-            if db_guild_object.id == 0:
-                continue
 
             if channel is None:
                 try:
@@ -129,6 +129,7 @@ class ALReminder(discord.Cog):
                 view.add_item(watch_episode)
 
                 await channel.send(embed=embed, view=view)
+                print(f'Posted to {guild.name}')
 
 
 def setup(bot: discord.Bot):

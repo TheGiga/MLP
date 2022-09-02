@@ -1,4 +1,4 @@
-import datetime
+import time
 
 import discord
 from utils import async_get
@@ -11,7 +11,7 @@ from .api_config import API_ENDPOINT, TITLE_FILTER
 class Api:
     def __init__(self, discord_instance: discord.Bot):
         self.discord = discord_instance
-        self.latest_call = round(int(datetime.datetime.utcnow().timestamp()))  # 1662034027
+        self.latest_call = int(time.time())
 
     @staticmethod
     async def get_title(title_id: int) -> Union[Title, None]:
@@ -44,6 +44,6 @@ class Api:
             ttl_obj = Title.parse_obj(title)
             titles.append(ttl_obj)
 
-        self.latest_call = round(int(datetime.datetime.utcnow().timestamp()))
+        self.latest_call = int(time.time())
 
         return titles

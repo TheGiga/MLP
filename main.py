@@ -14,7 +14,7 @@ from utils.database import db_init
 load_dotenv()
 
 intents = discord.Intents.default()
-intents.members = True
+#intents.members = True
 
 bot = discord.Bot(intents=intents)
 api = anilibria.Api(discord_instance=bot)
