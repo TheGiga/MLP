@@ -83,23 +83,27 @@ class ALReminder(discord.Cog):
             return
 
         to_post = await api.get_updates()
+
+        if len(to_post) == 0:
+            return
+
         for guild in self.bot.guilds:
             db_guild_object, created = await Guild.get_or_create(discord_id=guild.id)
 
             if created:
                 print(f'Created object for guild {guild}({guild.id}), but in loop.')
-                return
+                continue
 
             channel = guild.get_channel(db_guild_object.reminder_channel_id)
 
             if db_guild_object.id == 0:
-                return
+                continue
 
             if channel is None:
                 try:
                     await guild.fetch_channel(db_guild_object.reminder_channel_id)
                 except NotFound:
-                    return
+                    continue
 
             for update in to_post:
                 embed = discord.Embed(colour=discord.Colour.red(), timestamp=discord.utils.utcnow())
