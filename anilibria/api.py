@@ -12,6 +12,7 @@ class Api:
     def __init__(self, discord_instance: discord.Bot):
         self.discord = discord_instance
         self.latest_call = int(time.time())
+        self.call_cache = []
 
     @staticmethod
     async def get_title(title_id: int) -> Union[Title, None]:
@@ -41,6 +42,13 @@ class Api:
         titles = []
 
         for title in data:
+            if title.get('id') in self.call_cache:
+                continue
+
+            if len(self.call_cache) > 10:
+                self.call_cache.pop(0)
+
+            self.call_cache.append(title.get('id'))
             ttl_obj = Title.parse_obj(title)
             titles.append(ttl_obj)
 
