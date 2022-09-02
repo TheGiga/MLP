@@ -91,11 +91,9 @@ class ALReminder(discord.Cog):
         print('There is updates, processing...')
 
         db_guilds = await Guild.exclude(reminder_channel_id=0)
-        print(db_guilds)
 
         for db_guild_object in db_guilds:
             guild = self.bot.get_guild(db_guild_object.discord_id)
-            print(guild)
 
             channel = guild.get_channel(db_guild_object.reminder_channel_id)
 
