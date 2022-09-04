@@ -11,7 +11,7 @@ from .api_config import API_ENDPOINT, TITLE_FILTER
 class Api:
     def __init__(self, discord_instance: discord.Bot):
         self.discord = discord_instance
-        self.latest_call = 1662297588  # int(time.time())
+        self.latest_call = int(time.time())
         self.call_cache = []
 
     @staticmethod

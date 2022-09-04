@@ -78,7 +78,7 @@ class ALReminder(discord.Cog):
         )
         await channel.send(embed=embed)
 
-    @tasks.loop(seconds=10)
+    @tasks.loop(minutes=5)
     async def reminder_loop(self):
         if not self.bot.is_ready():
             return
