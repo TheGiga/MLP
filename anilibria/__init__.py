@@ -1,2 +1,2 @@
-from .models import Guild
+from .models import Guild, Reminder
 from .api import Api

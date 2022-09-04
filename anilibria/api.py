@@ -1,7 +1,7 @@
 import time
 
 import discord
-from utils import async_get
+from utils import async_get, ConsoleColors as clrs
 from typing import Union
 
 from .models import Title
@@ -46,7 +46,10 @@ class Api:
                 continue
 
             if len(self.call_cache) > 10:
+                print(f'{clrs.WARNING} Too many cached ids, popping.')
                 self.call_cache.pop(0)
+
+            print(f'{clrs.OKBLUE}{self.call_cache}')
 
             self.call_cache.append(title.get('id'))
             ttl_obj = Title.parse_obj(title)

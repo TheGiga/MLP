@@ -1,2 +1,2 @@
-from .guild import Guild
-__models__ = [Guild]
+from .guild import Guild, Reminder
+__models__ = [Guild, Reminder]

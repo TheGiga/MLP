@@ -5,7 +5,7 @@ from discord.ext.commands import has_permissions
 
 import config
 from anilibria.api_config import AL_TITLE, AL_URL
-from anilibria import Guild
+from anilibria import Guild, Reminder
 from main import api
 from utils import ConsoleColors as clrs
 
@@ -25,16 +25,16 @@ class ALReminder(discord.Cog):
     ):
         db_guild_object, created = await Guild.get_or_create(discord_id=ctx.guild.id)
 
-        if created:
-            print(f'Created object for guild {ctx.guild}({ctx.guild.id}), not in `on_guild_join`.')
+        reminder = await db_guild_object.get_reminder()
 
-        if db_guild_object.reminder_channel_id == 0:
+        if created or reminder.channel_id == 0:
+            print(f'Created object for guild {ctx.guild}({ctx.guild.id}), not in `on_guild_join`.')
             return await ctx.respond(
                 content="Оповещения уже отключены, используйте </reminder set:1015015152644542485> для их включения.",
                 phemeral=True
             )
 
-        db_guild_object.reminder_channel_id = 0
+        reminder.channel_id = 0
         await db_guild_object.save()
 
         await ctx.respond(
@@ -61,8 +61,9 @@ class ALReminder(discord.Cog):
                 ephemeral=True
             )
 
-        db_guild_object.reminder_channel_id = channel.id
-        await db_guild_object.save()
+        reminder = await db_guild_object.get_or_create_reminder()
+        reminder.channel_id = channel.id
+        await reminder.save()
 
         embed = discord.Embed(colour=discord.Colour.embed_background(), timestamp=discord.utils.utcnow())
         embed.description = """
@@ -91,26 +92,26 @@ class ALReminder(discord.Cog):
 
         print(f'{clrs.OKGREEN}There is updates, processing...')
 
-        db_guilds = await Guild.exclude(reminder_channel_id=0)
+        db_reminders = await Reminder.exclude(channel_id=0)
 
-        print(f'{clrs.OKCYAN}Guilds (raw): {db_guilds}')
+        print(f'{clrs.OKCYAN}Reminders (raw): {db_reminders}')
 
-        for db_guild_object in db_guilds:
-            guild = self.bot.get_guild(db_guild_object.discord_id)
+        for reminder_object in db_reminders:
+            guild = self.bot.get_guild(reminder_object.guild_id)
             if guild is None:
                 try:
-                    guild = await self.bot.fetch_guild(db_guild_object.discord_id)
+                    guild = await self.bot.fetch_guild(reminder_object.guild_id)
                 except NotFound:
-                    print(f"{clrs.FAIL}Guild with ID {db_guild_object.discord_id} not found!")
+                    print(f"{clrs.FAIL}Guild with ID {reminder_object.guild_id} not found!")
                     continue
 
-            channel = guild.get_channel(db_guild_object.reminder_channel_id)
+            channel = guild.get_channel(reminder_object.guild_id)
 
             if channel is None:
                 try:
-                    await guild.fetch_channel(db_guild_object.reminder_channel_id)
+                    channel = await guild.fetch_channel(reminder_object.channel_id)
                 except NotFound:
-                    print(f"{clrs.FAIL}Channel with ID {db_guild_object.reminder_channel_id} not found!")
+                    print(f"{clrs.FAIL}Channel with ID {reminder_object.channel_id} not found!")
                     continue
 
             for update in to_post:
