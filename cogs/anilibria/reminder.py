@@ -7,6 +7,7 @@ import config
 from anilibria.api_config import AL_TITLE, AL_URL
 from anilibria import Guild
 from main import api
+from utils import ConsoleColors as clrs
 
 
 class ALReminder(discord.Cog):
@@ -77,7 +78,7 @@ class ALReminder(discord.Cog):
         )
         await channel.send(embed=embed)
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(seconds=10)
     async def reminder_loop(self):
         if not self.bot.is_ready():
             return
@@ -85,15 +86,23 @@ class ALReminder(discord.Cog):
         to_post = await api.get_updates()
 
         if len(to_post) == 0:
-            print('No updates.')
+            print(f'{clrs.WARNING}No updates.')
             return
 
-        print('There is updates, processing...')
+        print(f'{clrs.OKGREEN}There is updates, processing...')
 
         db_guilds = await Guild.exclude(reminder_channel_id=0)
 
+        print(f'{clrs.OKCYAN}Guilds (raw): {db_guilds}')
+
         for db_guild_object in db_guilds:
             guild = self.bot.get_guild(db_guild_object.discord_id)
+            if guild is None:
+                try:
+                    guild = await self.bot.fetch_guild(db_guild_object.discord_id)
+                except NotFound:
+                    print(f"{clrs.FAIL}Guild with ID {db_guild_object.discord_id} not found!")
+                    continue
 
             channel = guild.get_channel(db_guild_object.reminder_channel_id)
 
@@ -101,6 +110,7 @@ class ALReminder(discord.Cog):
                 try:
                     await guild.fetch_channel(db_guild_object.reminder_channel_id)
                 except NotFound:
+                    print(f"{clrs.FAIL}Channel with ID {db_guild_object.reminder_channel_id} not found!")
                     continue
 
             for update in to_post:
@@ -127,7 +137,8 @@ class ALReminder(discord.Cog):
                 view.add_item(watch_episode)
 
                 await channel.send(embed=embed, view=view)
-                print(f'Posted to {guild.name}')
+
+            print(f'{clrs.OKGREEN}Posted to {guild.name}')
 
 
 def setup(bot: discord.Bot):

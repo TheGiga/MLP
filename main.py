@@ -10,11 +10,13 @@ from tortoise import run_async
 import anilibria
 import config
 from utils.database import db_init
+from utils import ConsoleColors as clrs
 
 load_dotenv()
 
 intents = discord.Intents.default()
-#intents.members = True
+intents.members = True
+
 
 bot = discord.Bot(intents=intents)
 api = anilibria.Api(discord_instance=bot)
@@ -22,7 +24,7 @@ api = anilibria.Api(discord_instance=bot)
 
 @bot.event
 async def on_ready():
-    print(f"Connected as {bot.user}")
+    print(f"{clrs.OKGREEN}Connected as {bot.user}")
 
 
 @bot.event
@@ -57,8 +59,9 @@ if __name__ == "__main__":
     for cog in config.COGS:
         try:
             bot.load_extension(cog)
+            print(f'{clrs.OKCYAN}Extension {cog} successfully loaded.')
         except ExtensionNotFound:
-            print(f'Extension {cog} not found.')
+            print(f'{clrs.FAIL}Extension {cog} not found.')
             continue
 
     run_async(db_init())

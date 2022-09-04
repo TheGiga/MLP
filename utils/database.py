@@ -1,4 +1,5 @@
 from tortoise import Tortoise
+from .colors import ConsoleColors as clrs
 
 
 async def db_init():
@@ -7,7 +8,7 @@ async def db_init():
         modules={'models': ['anilibria.models.db']}
     )
 
-    print('Database initialised...')
+    print(f'{clrs.OKBLUE}Database initialised...')
 
     await Tortoise.generate_schemas(safe=True)
 
