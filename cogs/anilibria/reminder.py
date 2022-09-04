@@ -34,8 +34,7 @@ class ALReminder(discord.Cog):
                 phemeral=True
             )
 
-        reminder.channel_id = 0
-        await db_guild_object.save()
+        await reminder.delete()
 
         await ctx.respond(
             content=f'✅ Оповещения о выходе новых серий успешно отключены.', ephemeral=True
