@@ -60,6 +60,8 @@ class ALReminder(discord.Cog):
                 ephemeral=True
             )
 
+        await ctx.defer()
+
         reminder = await db_guild_object.get_or_create_reminder()
         reminder.channel_id = channel.id
         await reminder.save()
@@ -116,18 +118,27 @@ class ALReminder(discord.Cog):
             for update in to_post:
                 embed = discord.Embed(colour=discord.Colour.red(), timestamp=discord.utils.utcnow())
 
+                genres = ""
+                for x in update.genres:
+                    genres += f'`{x}` '
+
                 title_desc = update.description
                 description = (title_desc[:200] + '..') if len(title_desc) > 200 else title_desc
 
                 embed.description = f"""
                 {description}
                 
+                **Жанры: {genres}**
                 {f'⚠ **{update.announce}**' if len(update.announce) >= 1 else ''}
                 """
 
-                embed.title = f'{update.names.get("ru")} `({update.type.get("full_string")})`'
+                embed.title = f'{update.names.get("ru")}'
 
-                embed.add_field(name='🧾 Серия', value=str(update.player['series'].get('last')))
+                embed.add_field(
+                    name='🧾 Серия',
+                    value=f"{update.player['series'].get('last')}/{update.type.get('series')} "
+                          f"`({update.type.get('length')} мин.)`"
+                )
                 embed.add_field(name='ℹ️ Статус', value=str(update.status.get('string')))
 
                 embed.set_image(url=f'{AL_URL}{update.posters["original"].get("url")}')
