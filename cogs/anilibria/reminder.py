@@ -16,22 +16,75 @@ class ALReminder(discord.Cog):
         self.reminder_loop.start()
 
     reminder = SlashCommandGroup("reminder", "Оповещения о новых релизах.")
+    reminder_ping = reminder.create_subgroup(name='ping', description="Настройки оповещений.")
 
     @guild_only()
     @has_permissions(manage_guild=True)
-    @reminder.command(name='disable', description='Отключить отправку оповещений.')
-    async def slash_disable(
+    @reminder_ping.command(
+        name='set_role', description='Установить роль для упоминания при отправке оповещения.'
+    )
+    async def reminder_set_ping_role(
+            self, ctx: discord.ApplicationContext,
+            role: discord.Option(discord.Role, name='роль', description="Роль для упоминания")
+    ):
+        db_guild_object, created = await Guild.get_or_create(discord_id=ctx.guild.id)
+
+        reminder = await db_guild_object.get_reminder()
+
+        if created or reminder is None:
+            return await ctx.respond(
+                content="Оповещения не включены!, используйте </reminder set:1015015152644542485> для их включения.",
+                ephemeral=True
+            )
+
+        reminder.ping = role.id
+        await reminder.save()
+
+        await ctx.respond(
+            content=f"☑ Роль {role.mention} успешно установлена для упоминания в оповещениях.",
+            ephemeral=True
+        )
+
+    @guild_only()
+    @has_permissions(manage_guild=True)
+    @reminder_ping.command(
+        name='remove_role', description='Отключить упоминание роли в оповещениях.'
+    )
+    async def reminder_set_ping_role(
             self, ctx: discord.ApplicationContext
     ):
         db_guild_object, created = await Guild.get_or_create(discord_id=ctx.guild.id)
 
         reminder = await db_guild_object.get_reminder()
 
-        if created or reminder.channel_id == 0:
-            print(f'Created object for guild {ctx.guild}({ctx.guild.id}), not in `on_guild_join`.')
+        if created or reminder is None:
+            return await ctx.respond(
+                content="Оповещения не включены!, используйте </reminder set:1015015152644542485> для их включения.",
+                ephemeral=True
+            )
+
+        reminder.ping = 0
+        await reminder.save()
+
+        await ctx.respond(
+            content=f"☑ Вы успешно выключили упоминание роли в оповещениях.",
+            ephemeral=True
+        )
+
+    @guild_only()
+    @has_permissions(manage_guild=True)
+    @reminder.command(name='disable', description='Отключить отправку оповещений.')
+    async def reminder_disable(
+            self, ctx: discord.ApplicationContext
+    ):
+        db_guild_object, created = await Guild.get_or_create(discord_id=ctx.guild.id)
+
+        reminder = await db_guild_object.get_reminder()
+
+        if created or reminder is None:
             return await ctx.respond(
                 content="Оповещения уже отключены, используйте </reminder set:1015015152644542485> для их включения.",
-                phemeral=True
+                ephemeral=True
             )
 
         await reminder.delete()
@@ -43,7 +96,7 @@ class ALReminder(discord.Cog):
     @guild_only()
     @has_permissions(manage_guild=True)
     @reminder.command(name='set', description='Включить отправку оповещений.')
-    async def slash_set(
+    async def reminder_set(
             self, ctx: discord.ApplicationContext, channel: discord.Option(
                 discord.TextChannel, name='канал', description='Канал в который будут отправляться оповещения.'
             )
@@ -70,8 +123,9 @@ class ALReminder(discord.Cog):
         embed.description = """
 **Данный канал установлен для получения уведомлений о выходе новых серий аниме на сайте `anilibria.tv`**.
 
+Для включения упоминания роли пропишите </reminder ping set_role:1>
 Для отключения уведомлений пропишите </reminder disable:1015015152644542485>
-        """
+        """  # TODO: Add reminder ping set_role command id
 
         embed.set_footer(icon_url=self.bot.user.avatar.url, text=config.DEFAULT_FOOTER)
 
@@ -88,14 +142,15 @@ class ALReminder(discord.Cog):
         to_post = await api.get_updates()
 
         if len(to_post) == 0:
-            print(f'{clrs.WARNING}No updates.')
             return
 
         print(f'{clrs.OKGREEN}There is updates, processing...')
 
         db_reminders = await Reminder.exclude(channel_id=0)
 
-        print(f'{clrs.OKCYAN}Reminders (raw): {db_reminders}')
+        reminders = [x.guild_id for x in db_reminders]
+
+        print(f'{clrs.OKCYAN}Reminders: {reminders}')
 
         for reminder_object in db_reminders:
             guild = self.bot.get_guild(reminder_object.guild_id)
@@ -107,6 +162,7 @@ class ALReminder(discord.Cog):
                     continue
 
             channel = guild.get_channel(reminder_object.guild_id)
+            role_id = reminder_object.ping
 
             if channel is None:
                 try:
@@ -147,7 +203,10 @@ class ALReminder(discord.Cog):
                 watch_episode = discord.ui.Button(label='Смотреть серию', emoji="🖥️", url=AL_TITLE.format(update.code))
                 view.add_item(watch_episode)
 
-                await channel.send(embed=embed, view=view)
+                await channel.send(
+                    content=f"<@&{role_id}>" if role_id != 0 else "",
+                    embed=embed, view=view
+                )
 
             print(f'{clrs.OKGREEN}Posted to {guild.name}')
 
