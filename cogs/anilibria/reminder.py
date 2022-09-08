@@ -172,32 +172,8 @@ class ALReminder(discord.Cog):
                     continue
 
             for update in to_post:
-                embed = discord.Embed(colour=discord.Colour.red(), timestamp=discord.utils.utcnow())
 
-                genres = ""
-                for x in update.genres:
-                    genres += f'`{x}` '
-
-                title_desc = update.description
-                description = (title_desc[:200] + '..') if len(title_desc) > 200 else title_desc
-
-                embed.description = f"""
-                {description}
-                
-                **Жанры: {genres}**
-                {f'⚠ **{update.announce}**' if len(update.announce) >= 1 else ''}
-                """
-
-                embed.title = f'{update.names.get("ru")}'
-
-                embed.add_field(
-                    name='🧾 Серия',
-                    value=f"{update.player['series'].get('last')}/{update.type.get('series')} "
-                          f"`({update.type.get('length')} мин.)`"
-                )
-                embed.add_field(name='ℹ️ Статус', value=str(update.status.get('string')))
-
-                embed.set_image(url=f'{AL_URL}{update.posters["original"].get("url")}')
+                embed = update.form_embed()
 
                 view = discord.ui.View()
                 watch_episode = discord.ui.Button(label='Смотреть серию', emoji="🖥️", url=AL_TITLE.format(update.code))
