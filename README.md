@@ -1,3 +1,5 @@
+# MOVED TO https://github.com/TheGiga/Arcueid
+
 # MLP
 [UA/CIS] Оповещения о выходе новых серий аниме на anilibria.tv
 
